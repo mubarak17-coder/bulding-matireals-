@@ -9,7 +9,7 @@ from typing import Final
 import gspread
 from dotenv import load_dotenv
 from google.oauth2.service_account import Credentials
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram import BotCommand, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -58,6 +58,18 @@ SCOPES: Final = [
 YES_NO_KEYBOARD = ReplyKeyboardMarkup(
     [["Да", "Нет"]], one_time_keyboard=True, resize_keyboard=True
 )
+
+BOT_COMMANDS: Final = [
+    BotCommand("start", "Приветствие"),
+    BotCommand("new_contract", "Добавить новый договор"),
+    BotCommand("list", "Последние 5 договоров"),
+    BotCommand("cancel", "Отменить ввод"),
+    BotCommand("help", "Справка"),
+]
+
+
+async def post_init(application: Application) -> None:
+    await application.bot.set_my_commands(BOT_COMMANDS)
 
 
 def _load_credentials() -> Credentials:
@@ -269,7 +281,7 @@ def build_application() -> Application:
     if not SPREADSHEET_ID:
         raise RuntimeError("SPREADSHEET_ID is not set")
 
-    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    app = Application.builder().token(TELEGRAM_BOT_TOKEN).post_init(post_init).build()
 
     conv = ConversationHandler(
         entry_points=[CommandHandler("new_contract", new_contract)],
